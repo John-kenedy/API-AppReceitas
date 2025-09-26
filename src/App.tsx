@@ -1,47 +1,47 @@
 import React, { useEffect, useState } from 'react';
+import './App.css'; 
 
-export default function Home() {
+function App() {
   const [recipes, setRecipes] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [sortBy, setSortBy] = useState('name'); // padrão 'name' (nome)
-  const [order, setOrder] = useState('asc'); // padrão crescente
+  const [sortBy, setSortBy] = useState('name');
+  const [order, setOrder] = useState('asc');
 
   useEffect(() => {
     const delayDebounce = setTimeout(() => {
       setLoading(true);
-      
-      // Define base da URL com sortBy e order
-      const baseUrl = searchTerm.trim() === ''
-        ? `https://dummyjson.com/recipes?sortBy=${sortBy}&order=${order}`
-        : `https://dummyjson.com/recipes/search?q=${encodeURIComponent(searchTerm)}&sortBy=${sortBy}&order=${order}`;
+      const baseUrl =
+        searchTerm.trim() === ''
+          ? `https://dummyjson.com/recipes?sortBy=${sortBy}&order=${order}`
+          : `https://dummyjson.com/recipes/search?q=${encodeURIComponent(searchTerm)}&sortBy=${sortBy}&order=${order}`;
 
       fetch(baseUrl)
         .then(res => res.json())
         .then(data => {
-          setRecipes(data.recipes.slice(0, 6)); // pega os 6 primeiros
+          setRecipes(data.recipes.slice(0, 6));
           setLoading(false);
         })
         .catch(() => setLoading(false));
     }, 500);
 
     return () => clearTimeout(delayDebounce);
-  }, [searchTerm, sortBy, order]); // depende dos 3 estados
+  }, [searchTerm, sortBy, order]);
 
   return (
-    <div style={{ padding: '20px' }}>
+    <div className="home-container">
       <input
         type="search"
-        placeholder="Buscar receitas..."
+        placeholder="🔍 Buscar receitas..."
         value={searchTerm}
         onChange={e => setSearchTerm(e.target.value)}
-        style={styles.searchInput}
+        className="search-input"
       />
 
-      <div style={styles.sortContainer}>
+      <div className="sort-controls">
         <label>
-          Ordenar por:{' '}
-          <select value={sortBy} onChange={e => setSortBy(e.target.value)} style={styles.select}>
+          Ordenar por:
+          <select value={sortBy} onChange={e => setSortBy(e.target.value)}>
             <option value="name">Nome</option>
             <option value="rating">Nota</option>
             <option value="difficulty">Dificuldade</option>
@@ -50,9 +50,9 @@ export default function Home() {
           </select>
         </label>
 
-        <label style={{ marginLeft: '15px' }}>
-          Ordem:{' '}
-          <select value={order} onChange={e => setOrder(e.target.value)} style={styles.select}>
+        <label>
+          Ordem:
+          <select value={order} onChange={e => setOrder(e.target.value)}>
             <option value="asc">Crescente</option>
             <option value="desc">Decrescente</option>
           </select>
@@ -62,21 +62,24 @@ export default function Home() {
       {loading ? (
         <p>Carregando receitas...</p>
       ) : (
-        <div style={styles.container}>
+        <div className="recipe-grid">
           {recipes.length === 0 ? (
             <p>Nenhuma receita encontrada.</p>
           ) : (
             recipes.map(recipe => (
-              <div key={recipe.id} style={styles.card}>
-                <img src={recipe.image} alt={recipe.name} style={styles.image} />
-                <h3>{recipe.name}</h3>
-                <p><strong>Tempo de preparo:</strong> {recipe.prepTimeMinutes} min</p>
-                <p><strong>Tempo de cozimento:</strong> {recipe.cookTimeMinutes} min</p>
-                <p><strong>Porções:</strong> {recipe.servings}</p>
-                <p><strong>Calorias:</strong> {recipe.caloriesPerServing}</p>
-                <p><strong>Nota:</strong> {recipe.rating}</p>
-                <p><strong>Dificuldade:</strong> {recipe.difficulty}</p>
-                <p><strong>Tipo:</strong> {recipe.mealType}</p>
+              <div key={recipe.id} className="recipe-card">
+                <img src={recipe.image} alt={recipe.name} className="recipe-image" />
+                <h3 className="recipe-title">{recipe.name}</h3>
+
+                <div className="recipe-info-grid">
+                  <div><span>⏱️</span> Tempo prep.: {recipe.prepTimeMinutes} min</div>
+                  <div><span>🍳</span> Cozimento: {recipe.cookTimeMinutes} min</div>
+                  <div><span>👥</span> Porções: {recipe.servings}</div>
+                  <div><span>🔥</span> Calorias: {recipe.caloriesPerServing} kcal</div>
+                  <div><span>⭐</span> Nota: {recipe.rating}</div>
+                  <div><span>⚙️</span> Dificuldade: {recipe.difficulty}</div>
+                  <div><span>🍽️</span> Tipo: {recipe.mealType[0]}</div>
+                </div>
               </div>
             ))
           )}
@@ -86,41 +89,4 @@ export default function Home() {
   );
 }
 
-const styles = {
-  searchInput: {
-    width: '100%',
-    maxWidth: '400px',
-    padding: '10px 15px',
-    marginBottom: '10px',
-    fontSize: '16px',
-    borderRadius: '6px',
-    border: '1px solid #ccc',
-  },
-  sortContainer: {
-    marginBottom: '20px',
-  },
-  select: {
-    padding: '5px 10px',
-    fontSize: '14px',
-    borderRadius: '5px',
-  },
-  container: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(3, 1fr)',
-    gap: '20px',
-  },
-  card: {
-    border: '1px solid #ddd',
-    borderRadius: '8px',
-    padding: '15px',
-    boxShadow: '0 2px 5px rgba(0,0,0,0.1)',
-    backgroundColor: '#fff',
-  },
-  image: {
-    width: '100%',
-    height: '150px',
-    objectFit: 'cover',
-    borderRadius: '6px',
-    marginBottom: '10px',
-  },
-};
+export default App;
