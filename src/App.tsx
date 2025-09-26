@@ -4,35 +4,29 @@ export default function Home() {
   const [recipes, setRecipes] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [sortBy, setSortBy] = useState('name'); // padrão 'name' (nome)
+  const [order, setOrder] = useState('asc'); // padrão crescente
 
-  // Debounce: espera 500ms depois do usuário parar de digitar para fazer a requisição
   useEffect(() => {
     const delayDebounce = setTimeout(() => {
-      if (searchTerm.trim() === '') {
-        // Se campo vazio, pega as primeiras 6 receitas padrão
-        setLoading(true);
-        fetch('https://dummyjson.com/recipes')
-          .then(res => res.json())
-          .then(data => {
-            setRecipes(data.recipes.slice(0, 6));
-            setLoading(false);
-          })
-          .catch(() => setLoading(false));
-      } else {
-        // Busca com o termo
-        setLoading(true);
-        fetch(`https://dummyjson.com/recipes/search?q=${encodeURIComponent(searchTerm)}`)
-          .then(res => res.json())
-          .then(data => {
-            setRecipes(data.recipes.slice(0, 6)); // limita a 6 resultados
-            setLoading(false);
-          })
-          .catch(() => setLoading(false));
-      }
+      setLoading(true);
+      
+      // Define base da URL com sortBy e order
+      const baseUrl = searchTerm.trim() === ''
+        ? `https://dummyjson.com/recipes?sortBy=${sortBy}&order=${order}`
+        : `https://dummyjson.com/recipes/search?q=${encodeURIComponent(searchTerm)}&sortBy=${sortBy}&order=${order}`;
+
+      fetch(baseUrl)
+        .then(res => res.json())
+        .then(data => {
+          setRecipes(data.recipes.slice(0, 6)); // pega os 6 primeiros
+          setLoading(false);
+        })
+        .catch(() => setLoading(false));
     }, 500);
 
-    return () => clearTimeout(delayDebounce); // limpa timeout se o termo mudar antes dos 500ms
-  }, [searchTerm]);
+    return () => clearTimeout(delayDebounce);
+  }, [searchTerm, sortBy, order]); // depende dos 3 estados
 
   return (
     <div style={{ padding: '20px' }}>
@@ -40,9 +34,30 @@ export default function Home() {
         type="search"
         placeholder="Buscar receitas..."
         value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
+        onChange={e => setSearchTerm(e.target.value)}
         style={styles.searchInput}
       />
+
+      <div style={styles.sortContainer}>
+        <label>
+          Ordenar por:{' '}
+          <select value={sortBy} onChange={e => setSortBy(e.target.value)} style={styles.select}>
+            <option value="name">Nome</option>
+            <option value="rating">Nota</option>
+            <option value="difficulty">Dificuldade</option>
+            <option value="caloriesPerServing">Calorias</option>
+            <option value="mealType">Tipo</option>
+          </select>
+        </label>
+
+        <label style={{ marginLeft: '15px' }}>
+          Ordem:{' '}
+          <select value={order} onChange={e => setOrder(e.target.value)} style={styles.select}>
+            <option value="asc">Crescente</option>
+            <option value="desc">Decrescente</option>
+          </select>
+        </label>
+      </div>
 
       {loading ? (
         <p>Carregando receitas...</p>
@@ -51,7 +66,7 @@ export default function Home() {
           {recipes.length === 0 ? (
             <p>Nenhuma receita encontrada.</p>
           ) : (
-            recipes.map((recipe) => (
+            recipes.map(recipe => (
               <div key={recipe.id} style={styles.card}>
                 <img src={recipe.image} alt={recipe.name} style={styles.image} />
                 <h3>{recipe.name}</h3>
@@ -76,10 +91,18 @@ const styles = {
     width: '100%',
     maxWidth: '400px',
     padding: '10px 15px',
-    marginBottom: '20px',
+    marginBottom: '10px',
     fontSize: '16px',
     borderRadius: '6px',
     border: '1px solid #ccc',
+  },
+  sortContainer: {
+    marginBottom: '20px',
+  },
+  select: {
+    padding: '5px 10px',
+    fontSize: '14px',
+    borderRadius: '5px',
   },
   container: {
     display: 'grid',
